@@ -26,86 +26,113 @@
 #include <vector>
 #include "compat.h"
 
-namespace jwsmtp {
+namespace jwsmtp
+{
 
-bool Connect(SOCKET sockfd, const SOCKADDR_IN& addr) {
 #ifdef WIN32
-   return bool(connect(sockfd, (sockaddr*)&addr, addr.get_size()) != SOCKET_ERROR);
+    ScopedSocket::SOCK_TYPE ScopedSocket::BAD_SOCKET = INVALID_SOCKET;
 #else
-   return bool(connect(sockfd, (sockaddr*)&addr, addr.get_size()) == 0);
+    ScopedSocket::SOCK_TYPE ScopedSocket::BAD_SOCKET = -1;
 #endif
-}
 
-bool Socket(SOCKET& s, int domain, int type, int protocol) {
-   s = socket(AF_INET, type, protocol);
-#ifdef WIN32
-   return bool(s != INVALID_SOCKET);
-#else
-   return bool(s != -1);
-#endif   
-}
 
-bool Send(int &CharsSent, SOCKET s, const char *msg, size_t len, int flags) {
-   CharsSent = send(s, msg, len, flags);
-#ifdef WIN32
-	return bool((CharsSent != SOCKET_ERROR));
-#else
-	return bool((CharsSent != -1));
-#endif   
-}
 
-bool Recv(int &CharsRecv, SOCKET s, char *buf, size_t len, int flags) {
-   CharsRecv = recv(s, buf, len, flags);
-#ifdef WIN32
-	return bool((CharsRecv != SOCKET_ERROR));
-#else
-	return bool((CharsRecv != -1));
-#endif  
-}
 
 // just wrap the call to shutdown the connection on a socket
 // this way I don't have to call it this way everywhere.
-void Closesocket(const SOCKET& s) {
-#ifdef WIN32
-	closesocket(s);
-#else
-	close(s);
-#endif
-}
 
 // This does nothing on unix.
 // for windoze only, to initialise networking, snore
-void initNetworking() {
+void initNetworking()
+{
 #ifdef WIN32
-	class socks
-	{
-	public:
-		bool init() {
+    class socks
+    {
+    public:
+        bool init()
+        {
 
-			WORD wVersionRequested;
-			WSADATA wsaData;
+            WORD wVersionRequested;
+            WSADATA wsaData;
 
-			wVersionRequested = MAKEWORD( 2, 0 );
-			int ret = WSAStartup( wVersionRequested, &wsaData);
-			if(ret)
-				return false;
-			initialised = true;
-			return true;
-		}
-		bool IsInitialised() const {return initialised;}
-		socks():initialised(false){init();}
-		~socks()
-		{
-			if(initialised)
-				shutdown();
-		}
-	private:
-		void shutdown(){WSACleanup();}
-		bool initialised;
-	};
-	static socks s;
+            wVersionRequested = MAKEWORD( 2, 0 );
+            int ret = WSAStartup( wVersionRequested, &wsaData);
+            if(ret) {
+                return false;
+            }
+            initialised = true;
+            return true;
+        }
+        bool IsInitialised() const
+        {
+            return initialised;
+        }
+        socks():initialised(false)
+        {
+            init();
+        }
+        ~socks()
+        {
+            if(initialised) {
+                shutdown();
+            }
+        }
+    private:
+        void shutdown()
+        {
+            WSACleanup();
+        }
+        bool initialised;
+    };
+    static socks s;
 #endif
 }
 
+bool ScopedSocket::Connect( const SOCKADDR_IN& addr )
+{
+#ifdef WIN32
+    return bool(connect(_sock, (sockaddr*)&addr, addr.get_size()) != SOCKET_ERROR);
+#else
+    return bool(connect(_sock, (sockaddr*)&addr, addr.get_size()) == 0);
+#endif
+}
+bool ScopedSocket::Create( int domain, int type, int protocol )
+{
+    _sock = socket(AF_INET, type, protocol);
+#ifdef WIN32
+    return bool(_sock != INVALID_SOCKET);
+#else
+    return bool(_sock != -1);
+#endif
+}
+bool ScopedSocket::Send( int &CharsSent, const char *msg, size_t len, int flags )
+{
+    CharsSent = send(_sock, msg, len, flags);
+#ifdef WIN32
+    return bool((CharsSent != SOCKET_ERROR));
+#else
+    return bool((CharsSent != -1));
+#endif
+}
+bool ScopedSocket::Recv( int &CharsRecv, char *buf, size_t len, int flags )
+{
+    CharsRecv = recv(_sock, buf, len, flags);
+#ifdef WIN32
+    return bool((CharsRecv != SOCKET_ERROR));
+#else
+    return bool((CharsRecv != -1));
+#endif
+}
+void ScopedSocket::Closesocket()
+{
+    if (_sock != BAD_SOCKET) {
+#ifdef WIN32
+        closesocket(_sock);
+#else
+        close(_sock);
+#endif
+    }
+    _sock = BAD_SOCKET;
+}
 } // end namespace jwsmtp
 

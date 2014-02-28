@@ -28,38 +28,38 @@
 
 // obviously we must escape the quotes i.e. \"
 std::string html("<html>"
-"<body>"
-"This is the html part of the message<br><br>"
-"<b>bold</b><br>"
-"<i>italic</i><br>"
-"<font size=\"7\">Large Text</font><br><br>"
-"Or a link: <a href=\"http://johnwiggins.net\">johnwiggins.net</a><br><br>"
-"And an image: <br><img alt=\"an image in email\" src=\"http://johnwiggins.net/jwsmtp/example.png\"><br>"
-"</body>"
-"</html>");
+                 "<body>"
+                 "This is the html part of the message<br><br>"
+                 "<b>bold</b><br>"
+                 "<i>italic</i><br>"
+                 "<font size=\"7\">Large Text</font><br><br>"
+                 "Or a link: <a href=\"http://johnwiggins.net\">johnwiggins.net</a><br><br>"
+                 "And an image: <br><img alt=\"an image in email\" src=\"http://johnwiggins.net/jwsmtp/example.png\"><br>"
+                 "</body>"
+                 "</html>");
 
 int main(int argc, char* argv[])
 {
-   // replace the users 'to' and 'from' here before compiling this demo
-   jwsmtp::mailer m("root", "root", "subject line",
-                    "This is the plain text part of the message", "localhost",
-                    jwsmtp::mailer::SMTP_PORT, false);
+    // replace the users 'to' and 'from' here before compiling this demo
+    jwsmtp::mailer m("root", "root", "subject line",
+                     "This is the plain text part of the message", "localhost",
+                     jwsmtp::mailer::SMTP_PORT, false);
 
-   // send a html file (remember you still can send an html file as an attachment
-   // but calling this function will allow mime compatible clients to actually
-   // display the html if the client is set to show html messages.
-   //    m.setmessageHTMLfile("/home/myname/thefile.html");
-   
-   // Build our html from a string. You can also send html as a vector.
-   // i.e.
-   //    std::vector<char> htmlvec;
-   //    ....add html to the vector.
-   //    m.setmessageHTML(htmlvec);
-   m.setmessageHTML(html);
+    // send a html file (remember you still can send an html file as an attachment
+    // but calling this function will allow mime compatible clients to actually
+    // display the html if the client is set to show html messages.
+    //    m.setmessageHTMLfile("/home/myname/thefile.html");
 
-   //m.username("someone@somewhere.net");
-   //m.password("secret");
-   m.send(); // send the mail
-   std ::cout << m.response() << "\n";
-   return 0;
+    // Build our html from a string. You can also send html as a vector.
+    // i.e.
+    //    std::vector<char> htmlvec;
+    //    ....add html to the vector.
+    //    m.setmessageHTML(htmlvec);
+    m.setmessageHTML(html);
+
+    //m.username("someone@somewhere.net");
+    //m.password("secret");
+    m.send(); // send the mail
+    std ::cout << m.response() << "\n";
+    return 0;
 }
